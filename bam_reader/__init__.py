@@ -2,6 +2,8 @@ import struct
 import zlib
 from typing import BinaryIO
 
+from bam_reader.cutils import bin2code
+
 FLG_FEXTRA = 0b00000100
 
 LAST_BLOCK = b"\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00\x42\x43\x02\x00\x1b\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -55,3 +57,42 @@ def decompress_bzgf(f: BinaryIO) -> bytearray:
         data.extend(infl)
 
     return data
+
+
+def extract_sequence(bam: BinaryIO) -> list[bytes]:
+    magic, l_text = struct.unpack("<4sI", bam.read(8))
+
+    if magic != b"BAM\x01":
+        raise BamError("Incorrect magic")
+
+    bam.seek(l_text, 1)
+
+    (n_ref,) = struct.unpack("<I", bam.read(4))
+
+    for i in range(n_ref):
+        (l_name,) = struct.unpack("<I", bam.read(4))
+        bam.seek(l_name + 4, 1)
+
+    while header := bam.read(36):
+        (
+            block_size,
+            ref_id,
+            pos,
+            l_read_name,
+            mapq,
+            bin_,
+            n_cigar_op,
+            flag,
+            l_seq,
+            next_ref_id,
+            next_pos,
+            tlen,
+        ) = struct.unpack("<I2i2B3HI3i", header)
+
+        end = bam.tell() + block_size - 32
+
+        bam.seek(l_read_name + 4 * n_cigar_op, 1)
+
+        yield bin2code(bam.read((l_seq + 1) // 2), l_seq)
+
+        bam.seek(end)
