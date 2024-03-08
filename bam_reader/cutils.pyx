@@ -14,3 +14,14 @@ def bin2code(unsigned char *bin, int size):
         return result[:size]
     finally:
         free(result)
+
+def gc_fraction(unsigned char * code):
+    cdef int gc = 0, at = 0;
+
+    for c in code:
+        if c == 67 or c == 71 or c == 83:
+           gc += 1;
+        elif c == 65 or c == 84 or c == 87:
+           at += 1
+    return gc / (gc + at)
+           
