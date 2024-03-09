@@ -59,7 +59,7 @@ def decompress_bzgf(f: BinaryIO) -> bytearray:
 
         return data
     except struct.error as e:
-        raise BzgfError(e.args[0]) from e
+        raise BzgfError("could not decode bytes") from e
 
 
 def extract_sequence(bam: BinaryIO) -> list[bytes]:
@@ -101,4 +101,4 @@ def extract_sequence(bam: BinaryIO) -> list[bytes]:
 
             bam.seek(end)
     except struct.error as e:
-        raise BzgfError(e.args[0]) from e
+        raise BzgfError("could not decode bytes") from e
