@@ -20,8 +20,8 @@ class BzgfError(BamError):
 def decompress_bzgf(f: BinaryIO) -> bytearray:
     data = bytearray()
 
-    while LAST_BLOCK != f.peek(28):
-        id1, id2, cm, flg, mtime, xfl, os_, xlen = struct.unpack("4BI2BH", f.read(12))
+    while header := f.read(12):
+        id1, id2, cm, flg, mtime, xfl, os_, xlen = struct.unpack("4BI2BH", header)
 
         if not (flg & FLG_FEXTRA):
             raise BzgfError("gzip flag incorrectly set")
